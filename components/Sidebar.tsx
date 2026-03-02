@@ -23,7 +23,7 @@ export default function Sidebar() {
         </div>
         <div>
           <h1 className="text-xl font-extrabold tracking-tight text-primary">Invoi</h1>
-          <p className="text-xs text-slate-500 font-medium">Local Business Manager</p>
+          <p className="text-xs text-slate-500 font-medium">Invoice Management System</p>
         </div>
       </div>
       <nav className="flex-1 px-4 py-4 space-y-1">

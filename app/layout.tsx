@@ -3,7 +3,7 @@ import "./globals.css";
 import AppLayout from "@/components/AppLayout";
 
 export const metadata: Metadata = {
-  title: "Invoi - Local Business Manager",
+  title: "Invoi - Invoice Management System",
   description: "Invoice generator lokal untuk freelancer, UMKM, dan kontraktor",
 };
 
