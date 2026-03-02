@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Business {
+  id          String   @id @default(cuid())
+  name        String
+  address     String?
+  npwp        String?
+  logoUrl     String?
+  ppnRate     Float    @default(11)
+  ppnEnabled  Boolean  @default(true)
+  pphRate     Float    @default(2)
+  pphEnabled  Boolean  @default(false)
+  notes       String?
+  terms       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  bankAccounts BankAccount[]
+}
+
+model BankAccount {
+  id        String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  bankName  String
+  accountName String
+  accountNumber String
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Client {
+  id          String   @id @default(cuid())
+  name        String
+  email       String?
+  phone       String?
+  address     String?
+  city        String?
+  province    String?
+  postalCode  String?
+  npwp        String?
+  contactPerson String?
+  industry    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  invoices    Invoice[]
+}
+
+model Invoice {
+  id            String   @id @default(cuid())
+  invoiceNumber String   @unique
+  clientId      String
+  client        Client   @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  issueDate     DateTime
+  dueDate       DateTime
+  status        String   @default("draft") // draft, sent, partial, paid, overdue
+  notes         String?
+  terms         String?
+  discountType  String?  // percent, fixed
+  discountValue Float    @default(0)
+  ppnEnabled    Boolean  @default(true)
+  pphEnabled    Boolean  @default(false)
+  bankAccountId String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  items         InvoiceItem[]
+  payments      Payment[]
+}
+
+model InvoiceItem {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Float
+  unit        String   @default("pcs")
+  price       Float
+  order       Int      @default(0)
+}
+
+model Payment {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  amount      Float
+  paymentDate DateTime
+  method      String?  // bank_transfer, credit_card, cash, etc
+  reference   String?
+  notes       String?
+  createdAt   DateTime @default(now())
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      String   @default("admin") // admin, staff
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

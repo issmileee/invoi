@@ -1,0 +1,16 @@
+version: "3.8"
+
+services:
+  invoi:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=file:/app/data/dev.db
+      - NODE_ENV=production
+    volumes:
+      - invoi-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  invoi-data:
