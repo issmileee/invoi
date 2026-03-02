@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { calculateInvoiceTotals } from "@/lib/invoice";
 
 export async function POST(
   request: Request,
@@ -26,11 +27,22 @@ export async function POST(
     });
     if (!invoice) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-    const subtotal = invoice.items.reduce((s, i) => s + i.quantity * i.price, 0);
+    const business = await prisma.business.findFirst({
+      select: { ppnRate: true, pphRate: true },
+    });
+    const invoiceTotal = calculateInvoiceTotals({
+      items: invoice.items,
+      discountType: invoice.discountType,
+      discountValue: invoice.discountValue,
+      ppnEnabled: invoice.ppnEnabled,
+      pphEnabled: invoice.pphEnabled,
+      ppnRate: business?.ppnRate,
+      pphRate: business?.pphRate,
+    }).total;
     const totalPaid = invoice.payments.reduce((s, p) => s + p.amount, 0);
 
     let newStatus = invoice.status;
-    if (totalPaid >= subtotal) {
+    if (totalPaid >= invoiceTotal) {
       newStatus = "paid";
     } else if (totalPaid > 0) {
       newStatus = "partial";

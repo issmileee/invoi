@@ -50,8 +50,14 @@ export default function NewInvoicePage() {
       .then((r) => r.json())
       .then((invs) => {
         const year = new Date().getFullYear();
-        const count = invs.filter((i: { invoiceNumber: string }) => i.invoiceNumber.startsWith(`INV/${year}/`)).length;
-        setInvoiceNumber(`INV/${year}/${String(count + 1).padStart(3, "0")}`);
+        const maxCounter = invs
+          .filter((i: { invoiceNumber: string }) => i.invoiceNumber.startsWith(`INV/${year}/`))
+          .reduce((max: number, inv: { invoiceNumber: string }) => {
+            const part = inv.invoiceNumber.split("/")[2];
+            const n = Number.parseInt(part || "0", 10);
+            return Number.isFinite(n) && n > max ? n : max;
+          }, 0);
+        setInvoiceNumber(`INV/${year}/${String(maxCounter + 1).padStart(3, "0")}`);
       });
   }, []);
 
@@ -76,6 +82,9 @@ export default function NewInvoicePage() {
 
   const save = async (asDraft = true) => {
     if (!clientId) return alert("Pilih klien terlebih dahulu");
+    const validItems = items.filter((i) => i.description.trim());
+    if (!validItems.length) return alert("Tambahkan minimal 1 item invoice");
+    if (saving) return;
     setSaving(true);
     try {
       const res = await fetch("/api/invoices", {
@@ -93,13 +102,22 @@ export default function NewInvoicePage() {
           ppnEnabled,
           pphEnabled,
           bankAccountId: bankAccountId || undefined,
-          items: items.filter((i) => i.description.trim()).map((i) => ({ ...i, quantity: Number(i.quantity), price: Number(i.price) })),
+          items: validItems.map((i) => ({ ...i, quantity: Number(i.quantity), price: Number(i.price) })),
         }),
       });
-      if (res.ok) {
-        const data = await res.json();
-        router.push(`/invoices/${data.id}`);
+      if (!res.ok) {
+        let errorMessage = "Gagal menyimpan invoice";
+        try {
+          const data = await res.json();
+          errorMessage = data?.error || errorMessage;
+        } catch {}
+        throw new Error(errorMessage);
       }
+
+      const data = await res.json();
+      router.push(`/invoices/${data.id}`);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Terjadi kesalahan saat menyimpan invoice");
     } finally {
       setSaving(false);
     }

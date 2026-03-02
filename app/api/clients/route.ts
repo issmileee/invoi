@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { calculateInvoiceTotals } from "@/lib/invoice";
 
 export async function GET(request: Request) {
   try {
@@ -20,6 +21,9 @@ export async function GET(request: Request) {
       },
       orderBy: { name: "asc" },
     });
+    const business = await prisma.business.findFirst({
+      select: { ppnRate: true, pphRate: true },
+    });
 
     const withOutstanding = await Promise.all(
       clients.map(async (c) => {
@@ -28,7 +32,15 @@ export async function GET(request: Request) {
           include: { items: true, payments: true },
         });
         const outstanding = invoices.reduce((sum, inv) => {
-          const total = inv.items.reduce((s, i) => s + i.quantity * i.price, 0);
+          const total = calculateInvoiceTotals({
+            items: inv.items,
+            discountType: inv.discountType,
+            discountValue: inv.discountValue,
+            ppnEnabled: inv.ppnEnabled,
+            pphEnabled: inv.pphEnabled,
+            ppnRate: business?.ppnRate,
+            pphRate: business?.pphRate,
+          }).total;
           const paid = inv.payments.reduce((s, p) => s + p.amount, 0);
           return sum + (total - paid);
         }, 0);
