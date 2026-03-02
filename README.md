@@ -1,50 +1,98 @@
-# Invoi
+# 📄 Invoi - Invoice Management System
 
-Invoice generator lokal untuk freelancer, UMKM, dan kontraktor. Dibangun dengan Next.js + Prisma + SQLite.
+**Invoi** adalah aplikasi manajemen invoice mandiri (self-hosted) yang dirancang untuk freelancer, UMKM, dan kontraktor. Dibuat dengan fokus pada kesederhanaan, kecepatan, dan privasi data menggunakan penyimpanan lokal.
 
-## Fitur
-- **Profil Bisnis**: Nama, alamat, NPWP, multi rekening bank, pengaturan pajak default (PPN 11%, PPh 23%)
-- **Manajemen Klien**: CRUD data klien dengan alamat lengkap
-- **Invoice Builder**: Layout split 1/3 form | 2/3 live preview real-time
-- **Line Items**: Deskripsi, qty, satuan, harga + diskon, PPN, PPh
-- **Status Tracking**: Draft → Sent → Partially Paid → Paid → Overdue
-- **Record Pembayaran**: Input pembayaran manual (nominal + tanggal)
-- **Dashboard**: Total invoiced, received, pending + grafik pemasukan bulanan
-- **Laporan**: Export CSV per tahun/bulan
-- **Export PDF**: Print invoice via browser (Ctrl+P)
+---
 
-## Stack
-- Next.js 14 (App Router)
-- TailwindCSS + Manrope font
-- Prisma ORM + SQLite
-- Docker + Docker Compose
+## 🚀 Fitur Utama
 
-## Menjalankan Lokal
-```bash
-cp .env.example .env
-npm install
-npm run prisma:generate
-npm run prisma:push
-npm run dev
-```
+- **Profil Bisnis**: Kelola identitas bisnis, NPWP, dan multi-rekening bank.
+- **Manajemen Klien**: Database klien terpusat untuk mempercepat pembuatan invoice.
+- **Invoice Builder Canggih**: Layout *split-view* dengan live preview real-time.
+- **Perpajakan & Diskon**: Dukungan PPN (11%), PPh 23, dan diskon per item.
+- **Status Tracking**: Pantau siklus hidup invoice (Draft → Sent → Partially Paid → Paid → Overdue).
+- **Dashboard Finansial**: Visualisasi total tagihan, pembayaran diterima, dan piutang tertunda.
+- **Export & Laporan**: Export laporan bulanan ke CSV dan cetak invoice ke PDF via browser.
 
-Buka `http://localhost:3000`
+---
 
-Setup pertama: kunjungi `/onboarding` untuk mengisi profil bisnis dan rekening bank.
+## 🛠️ Tech Stack
 
-## Docker
-```bash
-cp .env.example .env
-docker-compose up --build
-```
+- **Framework**: [Next.js 14](https://nextjs.org/) (App Router)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/) + [Lucide React Icons](https://lucide.dev/)
+- **Database & ORM**: [SQLite](https://sqlite.org/) + [Prisma ORM](https://www.prisma.io/)
+- **Containerization**: [Docker](https://www.docker.com/) & [Docker Compose](https://docs.docker.com/compose/)
+- **Fonts**: Manrope (via `next/font`)
 
-## Struktur Utama
-- `app/page.tsx` - Dashboard
-- `app/invoices/` - Daftar invoice, buat baru, edit, detail
-- `app/clients/` - Daftar klien, tambah, edit
-- `app/settings/` - Profil bisnis, bank, pajak
-- `app/reports/` - Laporan bulanan
-- `components/InvoicePreview.tsx` - Template invoice + print PDF
+---
 
-## Format Invoice
-Auto-number: `INV/{tahun}/{counter}` (contoh: INV/2025/001)
+## 💻 Cara Menjalankan Secara Lokal
+
+### Prasyarat
+- Node.js versi 18.x atau lebih baru.
+- npm atau yarn.
+
+### Langkah-langkah
+1. **Clone & Masuk ke Direktori**
+   ```bash
+   git clone https://github.com/issmileee/invoi.git
+   cd invoi
+   ```
+
+2. **Instal Dependensi**
+   ```bash
+   npm install
+   ```
+
+3. **Setup Database**
+   Inisialisasi schema database Prisma ke SQLite lokal:
+   ```bash
+   npx prisma generate
+   npx prisma db push
+   ```
+
+4. **Jalankan Aplikasi**
+   ```bash
+   npm run dev
+   ```
+   Aplikasi akan tersedia di [http://localhost:3000](http://localhost:3000).
+
+---
+
+## 🐳 Menjalankan Menggunakan Docker
+
+Metode ini sangat disarankan untuk penggunaan stabil (production-like) karena data akan tersimpan dengan aman di dalam volume Docker.
+
+1. **Build dan Jalankan Container**
+   Pastikan Docker Desktop sudah aktif, lalu jalankan:
+   ```bash
+   docker-compose up -d --build
+   ```
+
+2. **Akses Aplikasi**
+   Buka [http://localhost:3000](http://localhost:3000) di browser Anda.
+
+3. **Menghentikan Layanan**
+   ```bash
+   docker-compose down
+   ```
+
+---
+
+## 📂 Struktur Project
+
+- `app/` - Routing dan komponen halaman (Next.js App Router).
+- `components/` - Komponen UI yang dapat digunakan kembali.
+- `prisma/` - Definisi schema database (`schema.prisma`) dan file database SQLite.
+- `public/` - Aset statis seperti gambar dan font.
+- `lib/` - Utilitas fungsi dan konfigurasi database.
+
+---
+
+---
+
+## 📝 Catatan Penting
+Pada penggunaan pertama kali, sistem akan mengarahkan Anda ke halaman **/onboarding**. Pastikan Anda mengisi profil bisnis dan pengaturan bank agar data tersebut muncul secara otomatis di setiap invoice yang Anda buat.
+
+---
+*Dibuat dengan ❤️ untuk efisiensi bisnis Anda.*
