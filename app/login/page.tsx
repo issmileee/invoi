@@ -61,9 +61,9 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6">
-      <div className="w-full max-md">
-        <div className="flex items-center gap-3 mb-8 justify-center">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-8">
+      <div className="w-full max-w-lg">
+        <div className="flex items-center gap-3 mb-12 justify-center">
           <div className="size-12 bg-primary rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary/20 shrink-0">
             <span className="material-symbols-outlined text-2xl select-none notranslate" style={{ fontFeatureSettings: "'liga' 1" }}>receipt_long</span>
           </div>
