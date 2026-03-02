@@ -9,6 +9,7 @@ const navItems = [
   { href: "/clients", icon: "group", label: "Clients" },
   { href: "/reports", icon: "analytics", label: "Reports" },
   { href: "/settings", icon: "settings", label: "Settings" },
+  { href: "/admin/password", icon: "admin_panel_settings", label: "Admin" },
 ];
 
 export default function Sidebar() {
