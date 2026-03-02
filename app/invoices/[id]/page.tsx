@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { formatCurrency, formatDate, getInitials } from "@/lib/utils";
+import { calculateInvoiceTotals } from "@/lib/invoice";
 
 type Invoice = {
   id: string;
@@ -12,27 +13,48 @@ type Invoice = {
   dueDate: string;
   status: string;
   notes: string | null;
+  discountType: string | null;
+  discountValue: number;
+  ppnEnabled: boolean;
+  pphEnabled: boolean;
   client: { id: string; name: string; email: string | null; phone: string | null; address: string | null; city: string | null; province: string | null };
   items: { description: string; quantity: number; unit: string; price: number }[];
   payments: { id: string; amount: number; paymentDate: string; method: string | null; reference: string | null; notes: string | null }[];
+};
+
+type Settings = {
+  ppnRate: number;
+  pphRate: number;
 };
 
 export default function InvoiceDetailPage() {
   const params = useParams();
   const id = params.id as string;
   const [invoice, setInvoice] = useState<Invoice | null>(null);
+  const [settings, setSettings] = useState<Settings | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentDate, setPaymentDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    fetch(`/api/invoices/${id}`)
-      .then((r) => r.json())
-      .then(setInvoice);
+    Promise.all([fetch(`/api/invoices/${id}`).then((r) => r.json()), fetch("/api/settings").then((r) => r.json())]).then(([inv, set]) => {
+      setInvoice(inv);
+      setSettings(set);
+    });
   }, [id]);
 
-  const subtotal = invoice?.items.reduce((s, i) => s + i.quantity * i.price, 0) ?? 0;
+  const subtotal = invoice
+    ? calculateInvoiceTotals({
+        items: invoice.items,
+        discountType: invoice.discountType,
+        discountValue: invoice.discountValue,
+        ppnEnabled: invoice.ppnEnabled,
+        pphEnabled: invoice.pphEnabled,
+        ppnRate: settings?.ppnRate,
+        pphRate: settings?.pphRate,
+      }).total
+    : 0;
   const totalPaid = invoice?.payments.reduce((s, p) => s + p.amount, 0) ?? 0;
   const balance = subtotal - totalPaid;
 

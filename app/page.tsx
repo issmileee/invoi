@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { formatCurrency, formatDate, getInitials } from "@/lib/utils";
+import { calculateInvoiceTotals } from "@/lib/invoice";
 
 type Invoice = {
   id: string;
@@ -10,28 +11,51 @@ type Invoice = {
   issueDate: string;
   dueDate: string;
   status: string;
+  discountType: string | null;
+  discountValue: number;
+  ppnEnabled: boolean;
+  pphEnabled: boolean;
   client: { name: string };
   items: { quantity: number; price: number }[];
   payments: { amount: number }[];
 };
 
+type Settings = {
+  ppnRate: number;
+  pphRate: number;
+};
+
 export default function DashboardPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [settings, setSettings] = useState<Settings | null>(null);
   const [monthlyData, setMonthlyData] = useState<{ month: string; invoiced: number; received: number }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
       fetch("/api/invoices").then((r) => r.json()),
+      fetch("/api/settings").then((r) => r.json()),
       fetch(`/api/reports/monthly?year=${new Date().getFullYear()}`).then((r) => r.json()),
-    ]).then(([inv, monthly]) => {
+    ]).then(([inv, set, monthly]) => {
       setInvoices(inv);
+      setSettings(set);
       setMonthlyData(monthly);
       setLoading(false);
     });
   }, []);
 
-  const totalInvoiced = invoices.reduce((s, i) => s + i.items.reduce((a, it) => a + it.quantity * it.price, 0), 0);
+  const getInvoiceTotal = (inv: Invoice) =>
+    calculateInvoiceTotals({
+      items: inv.items,
+      discountType: inv.discountType,
+      discountValue: inv.discountValue,
+      ppnEnabled: inv.ppnEnabled,
+      pphEnabled: inv.pphEnabled,
+      ppnRate: settings?.ppnRate,
+      pphRate: settings?.pphRate,
+    }).total;
+
+  const totalInvoiced = invoices.reduce((sum, inv) => sum + getInvoiceTotal(inv), 0);
   const totalPaid = invoices.flatMap((i) => i.payments).reduce((s, p) => s + p.amount, 0);
   const pendingBalance = totalInvoiced - totalPaid;
 
@@ -180,7 +204,7 @@ export default function DashboardPage() {
                   </thead>
                   <tbody className="divide-y divide-primary/5">
                     {invoices.slice(0, 5).map((inv) => {
-                      const amount = inv.items.reduce((s, i) => s + i.quantity * i.price, 0);
+                      const amount = getInvoiceTotal(inv);
                       return (
                         <tr key={inv.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                           <td className="px-8 py-5">

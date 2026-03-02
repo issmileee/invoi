@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { formatCurrency, formatDate, getInitials } from "@/lib/utils";
+import { calculateInvoiceTotals } from "@/lib/invoice";
 
 type Invoice = {
   id: string;
@@ -10,13 +11,23 @@ type Invoice = {
   issueDate: string;
   dueDate: string;
   status: string;
+  discountType: string | null;
+  discountValue: number;
+  ppnEnabled: boolean;
+  pphEnabled: boolean;
   client: { name: string };
   items: { quantity: number; price: number }[];
   payments: { amount: number }[];
 };
 
+type Settings = {
+  ppnRate: number;
+  pphRate: number;
+};
+
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [settings, setSettings] = useState<Settings | null>(null);
   const [statusFilter, setStatusFilter] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -27,6 +38,23 @@ export default function InvoicesPage() {
       .then(setInvoices)
       .finally(() => setLoading(false));
   }, [statusFilter]);
+
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((r) => r.json())
+      .then(setSettings);
+  }, []);
+
+  const getInvoiceTotal = (inv: Invoice) =>
+    calculateInvoiceTotals({
+      items: inv.items,
+      discountType: inv.discountType,
+      discountValue: inv.discountValue,
+      ppnEnabled: inv.ppnEnabled,
+      pphEnabled: inv.pphEnabled,
+      ppnRate: settings?.ppnRate,
+      pphRate: settings?.pphRate,
+    }).total;
 
   const getStatusClass = (status: string) => {
     const map: Record<string, string> = {
@@ -87,7 +115,7 @@ export default function InvoicesPage() {
                   <tr><td colSpan={6} className="px-8 py-12 text-center text-slate-500">Loading...</td></tr>
                 ) : (
                   invoices.map((inv) => {
-                    const amount = inv.items.reduce((s, i) => s + i.quantity * i.price, 0);
+                    const amount = getInvoiceTotal(inv);
                     return (
                       <tr key={inv.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                         <td className="px-8 py-5">

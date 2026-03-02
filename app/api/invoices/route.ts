@@ -27,11 +27,27 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const year = new Date().getFullYear();
+    const normalizedStatus = body.status === "send" ? "sent" : body.status;
+    const status = ["draft", "sent", "partial", "paid", "overdue"].includes(normalizedStatus) ? normalizedStatus : "draft";
+    const items = Array.isArray(body.items) ? body.items.filter((item: { description?: string }) => item?.description?.trim()) : [];
 
-    const count = await prisma.invoice.count({
+    if (!body.clientId) {
+      return NextResponse.json({ error: "Client wajib dipilih" }, { status: 400 });
+    }
+    if (!items.length) {
+      return NextResponse.json({ error: "Minimal harus ada 1 item invoice" }, { status: 400 });
+    }
+
+    const existingNumbers = await prisma.invoice.findMany({
       where: { invoiceNumber: { startsWith: `INV/${year}/` } },
+      select: { invoiceNumber: true },
     });
-    const invoiceNumber = `INV/${year}/${String(count + 1).padStart(3, "0")}`;
+    const maxCounter = existingNumbers.reduce((max, inv) => {
+      const part = inv.invoiceNumber.split("/")[2];
+      const n = Number.parseInt(part || "0", 10);
+      return Number.isFinite(n) && n > max ? n : max;
+    }, 0);
+    const invoiceNumber = `INV/${year}/${String(maxCounter + 1).padStart(3, "0")}`;
 
     const invoice = await prisma.invoice.create({
       data: {
@@ -39,7 +55,7 @@ export async function POST(request: Request) {
         clientId: body.clientId,
         issueDate: new Date(body.issueDate || Date.now()),
         dueDate: new Date(body.dueDate || Date.now()),
-        status: body.status || "draft",
+        status,
         notes: body.notes,
         terms: body.terms,
         discountType: body.discountType,
@@ -47,9 +63,9 @@ export async function POST(request: Request) {
         ppnEnabled: body.ppnEnabled ?? true,
         pphEnabled: body.pphEnabled ?? false,
         bankAccountId: body.bankAccountId,
-        items: body.items?.length
+        items: items.length
           ? {
-              create: body.items.map((item: { description: string; quantity: number; unit?: string; price: number }, i: number) => ({
+              create: items.map((item: { description: string; quantity: number; unit?: string; price: number }, i: number) => ({
                 description: item.description,
                 quantity: item.quantity,
                 unit: item.unit || "pcs",
@@ -63,8 +79,9 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json(invoice);
-  } catch (e) {
+  } catch (e: unknown) {
     console.error(e);
-    return NextResponse.json({ error: "Failed to create invoice" }, { status: 500 });
+    const message = e instanceof Error ? e.message : "Failed to create invoice";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
