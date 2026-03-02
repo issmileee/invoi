@@ -11,6 +11,7 @@ type BankAccount = { id: string; bankName: string; accountName: string; accountN
 type Settings = { name: string; address?: string; npwp?: string; logoUrl?: string; ppnRate: number; ppnEnabled: boolean; pphRate: number; pphEnabled: boolean; bankAccounts: BankAccount[] };
 
 type LineItem = { description: string; quantity: number; unit: string; price: number };
+const DEFAULT_TERMS = "Pembayaran maksimal 30 hari setelah invoice terbit";
 
 export default function NewInvoicePage() {
   const router = useRouter();
@@ -31,7 +32,7 @@ export default function NewInvoicePage() {
   const [pphEnabled, setPphEnabled] = useState(false);
   const [bankAccountId, setBankAccountId] = useState("");
   const [notes, setNotes] = useState("");
-  const [terms, setTerms] = useState("");
+  const [terms, setTerms] = useState(DEFAULT_TERMS);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {

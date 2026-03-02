@@ -44,14 +44,25 @@
    npm install
    ```
 
-3. **Setup Database**
+3. **Setup Environment**
+   Buat file environment dari template:
+   ```bash
+   cp .env.example .env
+   ```
+
+4. **Setup Database**
    Inisialisasi schema database Prisma ke SQLite lokal:
    ```bash
    npx prisma generate
    npx prisma db push
    ```
 
-4. **Jalankan Aplikasi**
+5. **Build Production (Opsional, untuk verifikasi)**
+   ```bash
+   npm run build
+   ```
+
+6. **Jalankan Aplikasi**
    ```bash
    npm run dev
    ```

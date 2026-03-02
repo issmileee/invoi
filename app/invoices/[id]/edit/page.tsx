@@ -9,6 +9,7 @@ type Client = { id: string; name: string; email?: string; address?: string; city
 type BankAccount = { id: string; bankName: string; accountName: string; accountNumber: string; isDefault: boolean };
 type Settings = { name: string; address?: string; npwp?: string; logoUrl?: string; ppnRate: number; ppnEnabled: boolean; pphRate: number; pphEnabled: boolean; bankAccounts: BankAccount[] };
 type LineItem = { description: string; quantity: number; unit: string; price: number };
+const DEFAULT_TERMS = "Pembayaran maksimal 30 hari setelah invoice terbit";
 
 export default function EditInvoicePage() {
   const router = useRouter();
@@ -27,7 +28,7 @@ export default function EditInvoicePage() {
   const [pphEnabled, setPphEnabled] = useState(false);
   const [bankAccountId, setBankAccountId] = useState("");
   const [notes, setNotes] = useState("");
-  const [terms, setTerms] = useState("");
+  const [terms, setTerms] = useState(DEFAULT_TERMS);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -50,7 +51,7 @@ export default function EditInvoicePage() {
       setPphEnabled(inv.pphEnabled ?? false);
       setBankAccountId(inv.bankAccountId || "");
       setNotes(inv.notes || "");
-      setTerms(inv.terms || "");
+      setTerms(inv.terms || DEFAULT_TERMS);
       const def = set?.bankAccounts?.find((b: BankAccount) => b.isDefault);
       if (def && !inv.bankAccountId) setBankAccountId(def.id);
       setLoading(false);
