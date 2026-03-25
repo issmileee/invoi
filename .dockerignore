@@ -1,0 +1,8 @@
+.next
+.git
+*.db
+*.db-journal
+screenshoot
+mockup.html
+README.md
+.env.example

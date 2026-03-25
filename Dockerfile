@@ -1,21 +1,26 @@
-FROM node:20-alpine
+# Use Node 20 Debian-slim (avoids Alpine musl/OpenSSL issues)
+FROM node:20-slim
 
-RUN apk add --no-cache libc6-compat
+# Install OpenSSL (required by Prisma)
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
 WORKDIR /app
 
-COPY package.json package-lock.json* ./
-RUN npm ci --omit=dev
-
+# Copy everything including node_modules from host
 COPY . .
+
+# Generate Prisma client
 RUN npx prisma generate
+
+# Build the Next.js app
 RUN npm run build
+
+# Create directory for SQLite database
 RUN mkdir -p /app/data
 
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
-
+# Expose the port Next.js runs on
 EXPOSE 3000
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
 
-CMD ["sh", "-c", "npx prisma db push --accept-data-loss && npm start"]
+# Run db push (create/migrate DB) then start the app
+CMD ["sh", "-c", "npx prisma db push && npm start"]
